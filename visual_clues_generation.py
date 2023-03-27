@@ -55,11 +55,10 @@ if __name__ == "__main__":
         try:
             clues = get_visual_clues(processor, model, image, device)
             visual_clues[pid] = clues.capitalize() + '.'
-            print(visual_clues[pid])
+            # print(visual_clues[pid])
         except Exception as e:
             print(image_file)
             print(e)
-            break
 
     ## Save the visual_clues
     output_file = os.path.join(output_path, output_name)
