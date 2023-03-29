@@ -1,15 +1,12 @@
 from pyserini.search.lucene import LuceneSearcher
 import os
 import json
-import spacy
 from tqdm import tqdm
 from utils import *
 
 
 def retrieval(query):
-    hits = ssearcher.search(query, 10)
-    # for i in range(0, 10):
-    #     print(f'{i + 1:2} {hits[i].docid:7} {hits[i].score:.5f}')
+    hits = ssearcher.search(query, 5)
     paragraphs = []
     for i in range(len(hits)):
         doc = ssearcher.doc(hits[i].docid)
@@ -28,9 +25,11 @@ if __name__ == "__main__":
     visual_clues = json.load(open(os.path.join(output_path, 'visual_clues.json')))["visual_clues"]
 
     knowledge_store = "wikipedia-dpr"
-    nlp = spacy.load("en_core_web_md")
-    ssearcher = LuceneSearcher.from_prebuilt_index(knowledge_store)
+    # ssearcher = LuceneSearcher.from_prebuilt_index(knowledge_store)
 
+    knowledge_store_path = "indexes/index-wikipedia-dpr-20210120-d1b9e6"
+    ssearcher = LuceneSearcher(knowledge_store_path)
+    
     ## Retrieve external knowledge
     external_knowledge = {}
 
@@ -42,23 +41,19 @@ if __name__ == "__main__":
         hint = get_hint_text(problems[pid])
         visual_clues = get_visual_clues(problems[pid])
 
-        query = " ".join([question, hint, visual_clues]).strip()
-
-        import ipdb; ipdb.set_trace()
-
-        nlp_text = nlp(query).sents
-        sent_pages = []
-        for sent in nlp_text:
+        sent_paragraphs = []
+        for sent in [question, hint, visual_clues]:
             sent = str(sent)
+            if sent == "": 
+                continue
             try:
                 paragraphs = retrieval(sent)
-                external_knowledge[pid] = paragraphs
-                sent_pages.append((sent, paragraphs))
-                external_knowledge[pid] = sent_pages
-                # print(external_knowledge[pid])
+                sent_paragraphs.append((sent, paragraphs))
             except Exception as e:
                 print(sent)
                 print(e)
+        external_knowledge[pid] = sent_paragraphs
+        # print(external_knowledge[pid])
 
     ## Save the external knowledge
     output_file = os.path.join(output_path, output_name)
