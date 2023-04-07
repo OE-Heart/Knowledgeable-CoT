@@ -13,9 +13,9 @@ def get_hint_text(problem):
     return hint
 
 
-def get_context_text(problem, use_caption):
-    txt_context = problem['hint']
-    img_context = problem['caption'] if use_caption else ""
+def get_context_text(problem, use_visual_clues):
+    txt_context = get_hint_text(problem)
+    img_context = get_visual_clues(problem) if use_visual_clues else ""
     context = " ".join([txt_context, img_context]).strip()
     if context == "":
         context = "N/A"
@@ -101,50 +101,3 @@ def create_one_example(format, question, context, choice, answer, lecture, solut
     if text.endswith("BECAUSE:"):
         text = text.replace("BECAUSE:", "").strip()
     return text
-
-
-def build_prompt(problems, shot_qids, test_qid, args):
-
-    examples = []
-
-    # n-shot training examples
-    for qid in shot_qids:
-        question = get_question_text(problems[qid])
-        context = get_context_text(problems[qid], args.use_caption)
-        choice = get_choice_text(problems[qid], args.options)
-        answer = get_answer(problems[qid], args.options)
-        lecture = get_lecture_text(problems[qid])
-        solution = get_solution_text(problems[qid])
-
-        train_example = create_one_example(args.prompt_format,
-                                           question,
-                                           context,
-                                           choice,
-                                           answer,
-                                           lecture,
-                                           solution,
-                                           test_example=False)
-        examples.append(train_example)
-
-    # test example
-    question = get_question_text(problems[test_qid])
-    context = get_context_text(problems[test_qid], args.use_caption)
-    choice = get_choice_text(problems[test_qid], args.options)
-    answer = get_answer(problems[test_qid], args.options)
-    lecture = get_lecture_text(problems[test_qid])
-    solution = get_solution_text(problems[test_qid])
-
-    test_example = create_one_example(args.prompt_format,
-                                      question,
-                                      context,
-                                      choice,
-                                      answer,
-                                      lecture,
-                                      solution,
-                                      test_example=True)
-    examples.append(test_example)
-
-    # create the prompt input
-    prompt_input = '\n\n'.join(examples)
-
-    return prompt_input

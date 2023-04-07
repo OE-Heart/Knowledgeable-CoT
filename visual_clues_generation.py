@@ -9,7 +9,7 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings("ignore")
 
-CHECKPONIT_DIR = "/data/oyx/PLM"
+PLM_DIR = "/data/oyx/PLM"
 
 def get_visual_clues(processor, model, image, device):
     prompt = "a photo of"
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     output_name = "visual_clues.json"
 
     model_name = "blip2-opt-2.7b"
-    model_path = os.path.join(CHECKPONIT_DIR, model_name)
+    model_path = os.path.join(PLM_DIR, model_name)
 
     ## Read data
     problems = json.load(open(os.path.join(input_path, 'problems.json')))
