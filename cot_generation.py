@@ -1,10 +1,10 @@
 import os
 import re
 import json
-import time
 import argparse
 import random
 from tqdm import tqdm
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from easyinstruct.utils.api import set_openai_key, set_proxy
 from easyinstruct.utils.log import setup_logger
@@ -44,6 +44,7 @@ def load_data(args):
     return problems, qids, shot_qids
 
 
+@retry(stop=stop_after_attempt(5), wait=wait_fixed(60))
 def get_instruct_result(problems, shot_qids, test_qid, args):
     examples = []
 
@@ -125,10 +126,6 @@ def get_result_path_and_file(args):
     result_path = os.path.join(args.output_root, args.model, args.test_split, args.prompt_format)
     result_file = os.path.join(result_path, "{}shots_seed_{}.json".format(args.n_shots, args.seed))
 
-    if os.path.exists(result_file):
-        # make sure the existing log file is not over-written
-        result_file += time.strftime("-%Y-%m-%d-%H-%M-%S")
-
     return result_path, result_file
 
 
@@ -203,9 +200,29 @@ if __name__ == '__main__':
 
     problems, qids, shot_qids = load_data(args)  # probelms, test question ids, shot example ids
 
-    correct = 0
-    results = {}
-    outputs = {}
+    # load the check point
+    if os.path.exists(result_file):
+        print("# The result file exists! We will load the check point!!!")
+        check_point = json.load(open(result_file))
+
+        acc = check_point['acc']
+        correct = check_point['correct']
+        count = check_point['count']
+        results = check_point['results']
+        outputs = check_point['outputs']
+
+        if count >= len(qids):
+            print("## The result file is complete! We will exit!!!")
+            print(f"{len(results)}/{len(qids)}, correct: {correct}, acc: {round(acc, 2)}%")
+            exit()
+        else:
+            print("## The result file is not complete! We will continue!!!")
+            qids = qids[count:]
+    else:
+        correct = 0
+        count = 0
+        results = {}
+        outputs = {}
 
     for i, qid in enumerate(tqdm(qids)):
         if qid in results:
@@ -238,4 +255,4 @@ if __name__ == '__main__':
 
         if (i + 1) % args.save_every == 0 or (i + 1) == len(qids):
             print(f"{len(results)}/{len(qids)}, correct: {correct}, acc: {round(acc, 2)}%, saving to {result_file}")
-            save_results(result_file, acc, correct, i + 1, shot_qids, args, results, outputs)
+            save_results(result_file, acc, correct, count + i + 1, shot_qids, args, results, outputs)
