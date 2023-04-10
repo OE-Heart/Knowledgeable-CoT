@@ -134,7 +134,7 @@ def get_pred_idx(prediction, choices, options):
 
 def get_result_path_and_file(args):
     result_path = os.path.join(
-        args.output_root, args.model, args.test_split, args.prompt_format
+        args.output_root, args.model, args.test_split, args.prompt_format, os.path.basename(args.visual_clues_file)
     )
     result_file = os.path.join(
         result_path, "{}shots_seed_{}.json".format(args.n_shots, args.seed)

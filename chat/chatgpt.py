@@ -18,7 +18,7 @@ set_proxy("http://127.0.0.1:7890")
 QUESTION_INSTRUCTION = (
     "I have an image. "
     "Ask me questions about the content of this image. "
-    "Carefully asking me informative questions to maximize your information about this image content. "
+    "Carefully asking me informative questions to maximize your information only about this image content. "
     "Each time ask one question only without giving an answer. "
     "Avoid asking yes/no questions."
     'I\'ll put my answer beginning with "Answer:".'
@@ -43,7 +43,7 @@ ANSWER_INSTRUCTION = "Answer given questions. If you are not sure about the answ
 SUB_ANSWER_INSTRUCTION = "Answer: "  # template following blip2 huggingface demo
 
 
-FIRST_QUESTION = "Describe this image in detail."
+FIRST_QUESTION = "a photo of"
 
 
 VALID_CHATGPT_MODELS = ["gpt-3.5-turbo"]
