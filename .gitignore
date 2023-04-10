@@ -133,4 +133,5 @@ data/scienceqa/images
 data/knowledge.json
 indexes/
 results/
+test/
 openai_keys.json

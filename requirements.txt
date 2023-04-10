@@ -9,3 +9,5 @@ transformers==4.21.1
 spacy==3.0.6
 pyserini==0.19.2
 faiss-gpu==1.7.2
+accelerate==0.17.1
+bitsandbytes==0.37.2
