@@ -83,9 +83,22 @@ if __name__ == "__main__":
     if multiple_api_keys:
         api_list = json.load(open("openai_keys.json"))
 
-    ## Generate image visual_clues
-    visual_clues = {}
+    output_file = os.path.join(output_path, output_name)
+    if os.path.exists(output_file):
+        check_point = json.load(open(output_file))
+        visual_clues = check_point["visual_clues"]
+        count = len(visual_clues)
 
+        if count >= len(pids):
+            print("# The result file is complete! We will exit!!!")
+            exit()
+        else:
+            print("# The result file is not complete! We will continue!!!")
+            pids = pids[count:]
+    else:
+        visual_clues = {}
+
+    ## Generate image visual_clues
     print(f"Generating visual_clues!")
     for i, pid in enumerate(tqdm(pids)):
         image_file = os.path.join(
@@ -104,12 +117,11 @@ if __name__ == "__main__":
             print(image_file)
             print(e)
 
-    ## Save the visual_clues
-    output_file = os.path.join(output_path, output_name)
-    os.makedirs(output_path, exist_ok=True)
-    print(f"Saved to {output_file}")
+        ## Save the visual_clues
+        if (i + 1) % 10 == 0 or (i + 1) == len(pids):
+            print(f"Saved to {output_file}")
 
-    results = {"model": model_name, "visual_clues": visual_clues}
+            results = {"model": model_name, "visual_clues": visual_clues}
 
-    with open(output_file, "w") as f:
-        json.dump(results, f, indent=2, separators=(",", ": "))
+            with open(output_file, "w") as f:
+                json.dump(results, f, indent=2, separators=(",", ": "))
