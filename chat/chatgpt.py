@@ -109,7 +109,7 @@ def prepare_chatgpt_message(task_prompt, questions, answers, sub_prompt):
     return messages
 
 
-@retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=2, max=120))
+@retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=2, max=60))
 def call_chatgpt(chatgpt_messages, max_tokens=40, model="gpt-3.5-turbo"):
     prompt_input = BasePrompt()
     output = prompt_input.get_openai_result(

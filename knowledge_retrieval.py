@@ -1,7 +1,8 @@
-from pyserini.search.lucene import LuceneSearcher
 import os
 import json
 from tqdm import tqdm
+from pyserini.search.lucene import LuceneSearcher
+
 from utils import *
 
 

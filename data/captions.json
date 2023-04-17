@@ -4,7 +4,7 @@
   "tokenizer": "nlpconnect/vit-gpt2-image-captioning",
   "max_length": 64,
   "num_beams": 4,
-  "captions": {
+  "visual_clues": {
     "1": "An aerial view of a painting of a forest.",
     "2": "A wooden board with a wooden head on top of it.",
     "3": "A man riding skis down a snow covered slope.",

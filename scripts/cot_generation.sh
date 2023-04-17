@@ -3,6 +3,8 @@ python cot_generation.py \
 --test_number -1 \
 --n_shots 2 \
 --prompt_format QCM-ALE \
---seed 1 \
+--seed 3 \
 --use_visual_clues \
---multiple_api_keys
+--visual_clues_file data/visual_clues_with_chat.json \
+--temperature 0.7 \
+--n_paths 10

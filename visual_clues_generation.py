@@ -1,16 +1,15 @@
 import os
 import json
 import torch
+import warnings
 from tqdm import tqdm
 from PIL import Image
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
-
 from easyinstruct.utils.api import set_openai_key
 
 from chat.chatgpt import AskQuestions, summarize_chat
 from chat.blip2 import Blip2
 
-import warnings
 
 warnings.filterwarnings("ignore")
 
@@ -29,14 +28,13 @@ def get_visual_clues(processor, model, image, device):
 
 def get_visual_clues_with_chat(processor, model, image, device):
     blip2 = Blip2(processor, model, device)
-
     chat = AskQuestions(image, blip2, model="gpt-3.5-turbo")
 
     questions, answers, n_token_chat = chat.chatting(n_rounds=10, print_mode="no")
-
     summary, summary_prompt, n_token_sum = summarize_chat(
         questions, answers, model="gpt-3.5-turbo"
     )
+
     result = {
         "summary": summary,
         "chat": summary_prompt,
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     output_name = "visual_clues_with_chat.json"
     plm_path = "/data/oyx/PLM"
     device_id = 2
-    multiple_api_keys = True
+    multiple_api_keys = False
 
     # model_name = "blip2-opt-2.7b"
     model_name = "blip2-flan-t5-xxl"
@@ -118,7 +116,7 @@ if __name__ == "__main__":
             print(e)
 
         ## Save the visual_clues
-        if (i + 1) % 10 == 0 or (i + 1) == len(pids):
+        if (i + 1) % 5 == 0 or (i + 1) == len(pids):
             print(f"Saved to {output_file}")
 
             results = {"model": model_name, "visual_clues": visual_clues}

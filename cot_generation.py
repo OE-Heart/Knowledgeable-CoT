@@ -9,7 +9,6 @@ from tenacity import (
     stop_after_attempt,
     wait_random_exponential,
 )
-
 from easyinstruct.utils.api import set_openai_key, set_proxy
 from easyinstruct.utils.log import setup_logger
 from easyinstruct.prompts import FewshotCoTPrompt
@@ -134,7 +133,7 @@ def get_pred_idx(prediction, choices, options):
 
 def get_result_path_and_file(args):
     result_path = os.path.join(
-        args.output_root, args.model, args.test_split, args.prompt_format, os.path.basename(args.visual_clues_file)
+        args.output_root, args.model, args.test_split, args.prompt_format, os.path.basename(args.visual_clues_file), "paths_{}".format(args.n_paths)
     )
     result_file = os.path.join(
         result_path, "{}shots_seed_{}.json".format(args.n_shots, args.seed)
@@ -181,6 +180,9 @@ def parse_args():
     )
     parser.add_argument(
         "--multiple_api_keys", action="store_true", help="Use multiple API keys"
+    )
+    parser.add_argument(
+        "--n_paths", type=int, default=1, help="Number of reasoning paths"
     )
     parser.add_argument(
         "--save_every",
@@ -288,35 +290,44 @@ if __name__ == "__main__":
         results = {}
         outputs = {}
 
-    for i, qid in enumerate(tqdm(qids)):
-        if qid in results:
-            continue
+    for _ in range(args.n_paths):
+        for i, qid in enumerate(tqdm(qids)):
+            if qid in results:
+                continue
 
-        if args.multiple_api_keys:
-            set_openai_key(api_list[i % len(api_list)])
+            if args.multiple_api_keys:
+                set_openai_key(api_list[i % len(api_list)])
 
-        choices = problems[qid]["choices"]
-        answer = problems[qid]["answer"]  # 0, 1, ..., 4
-        label = args.options[answer]  # 'A', ..., 'E'
+            choices = problems[qid]["choices"]
+            answer = problems[qid]["answer"]  # 0, 1, ..., 4
+            label = args.options[answer]  # 'A', ..., 'E'
 
-        prediction, output = get_instruct_result(problems, shot_qids, qid, args)
+            prediction, output = get_instruct_result(problems, shot_qids, qid, args)
 
-        pred_idx = get_pred_idx(prediction, choices, args.options)  # 0, 1, ..., 4
+            pred_idx = get_pred_idx(prediction, choices, args.options)  # 0, 1, ..., 4
 
-        results[qid] = pred_idx
-        outputs[qid] = output
-        if pred_idx == answer:
-            correct += 1
+            if qid not in results:
+                results[qid] = [pred_idx]
+            else:
+                results[qid].append(pred_idx)
 
-        acc = correct / len(results) * 100
+            if qid not in outputs:
+                outputs[qid] = [output]
+            else:
+                outputs[qid].append(output)
 
-        if args.debug or i < 3:
-            print("# labeled answer:", label)
-            print("# predicted answer:", prediction)
-            print("# predicted index:", pred_idx)
-            print("# predicted output:", output)
-            print("\n######################################################\n")
+            if max(results[qid], key=results[qid].count) == answer:
+                correct += 1
 
-        if (i + 1) % args.save_every == 0 or (i + 1) == len(qids):
-            print(f"{len(results)}/{len(qids)}, correct: {correct}, acc: {round(acc, 2)}%, saving to {result_file}")
-            save_results(result_file, acc, correct, count + i + 1, shot_qids, args, results, outputs)
+            acc = correct / len(results) * 100
+
+            if args.debug or i < 3:
+                print("# labeled answer:", label)
+                print("# predicted answer:", prediction)
+                print("# predicted index:", pred_idx)
+                print("# predicted output:", output)
+                print("\n######################################################\n")
+
+            if (i + 1) % args.save_every == 0 or (i + 1) == len(qids):
+                print(f"{len(results)}/{len(qids)}, correct: {correct}, acc: {round(acc, 2)}%, saving to {result_file}")
+                save_results(result_file, acc, correct, count + i + 1, shot_qids, args, results, outputs)
