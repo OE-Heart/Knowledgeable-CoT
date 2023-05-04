@@ -20,6 +20,12 @@ set_openai_key("")
 set_proxy("http://127.0.0.1:7890")
 
 
+prompt_cot = """
+
+Given the question (and the context), select the answer from the options ["A", "B", "C", "D", "E"]. You should give consice and step-by-step solutions. Finally, conclude the answer in the format of "the answer is [ANSWER]", where [ANSWER] is one from the options ["A", "B", "C", "D", "E"]. For example, "the answer is A", "the answer is B", "the answer is C", "the answer is D", or "the answer is E". If the answer is not in the options, select the most possible option.
+"""
+
+
 def load_data(args):
     problems = json.load(open(os.path.join(args.data_root, "problems.json")))
     pid_splits = json.load(open(os.path.join(args.data_root, "pid_splits.json")))
@@ -97,6 +103,8 @@ def get_instruct_result(problems, shot_qids, test_qid, args):
         prompt=test_example, in_context_examples=examples, n_shots=args.n_shots
     )
 
+    prompt_input.prompt = prompt_cot + prompt_input.prompt
+
     if args.debug:
         print(prompt_input.prompt)
 
@@ -111,9 +119,9 @@ def get_instruct_result(problems, shot_qids, test_qid, args):
     )
 
     # extract the answer
-    pattern = re.compile(r"The answer is ([A-Z]).")
+    pattern = re.compile(r"[Tt]he answer is ([A-Z])")
     res = pattern.findall(output)
-    if len(res) == 1:
+    if len(res) > 0:
         answer = res[0]  # 'A', 'B', ...
     else:
         answer = "FAILED"
@@ -289,11 +297,9 @@ if __name__ == "__main__":
         count = 0
         results = {}
         outputs = {}
-
+    
     for _ in range(args.n_paths):
         for i, qid in enumerate(tqdm(qids)):
-            if qid in results:
-                continue
 
             if args.multiple_api_keys:
                 set_openai_key(api_list[i % len(api_list)])
@@ -319,7 +325,7 @@ if __name__ == "__main__":
             if max(results[qid], key=results[qid].count) == answer:
                 correct += 1
 
-            acc = correct / len(results) * 100
+            acc = correct / (count + i + 1) * 100
 
             if args.debug or i < 3:
                 print("# labeled answer:", label)

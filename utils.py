@@ -18,7 +18,7 @@ def get_context_text(problem, use_visual_clues):
     img_context = get_visual_clues(problem) if use_visual_clues else ""
     context = " ".join([txt_context, img_context]).strip()
     if context == "":
-        context = "N/A"
+        context = "Select the better answer."
     return context
 
 
