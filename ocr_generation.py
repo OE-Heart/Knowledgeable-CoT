@@ -21,7 +21,7 @@ if __name__ == "__main__":
     results = {
         "model": "easyocr",
         "url": "https://github.com/JaidedAI/EasyOCR",
-        "version": "1.1.8",
+        "version": "1.6.2",
         "texts": {}
     }
 
@@ -34,9 +34,10 @@ if __name__ == "__main__":
         results["texts"][pid] = str(result)
 
         if len(result) > 0:
-            texts = [(t[0], t[1]) for t in result] # (coordiantes, text)
+            # texts = [(t[0], t[1]) for t in result] # (coordiantes, text)
+            texts = [t[1] for t in result]
 
-            visual_clues["visual_clues"][pid] += f"\n\nDetected text in the image: {texts}"
+            visual_clues["visual_clues"][pid] += f" Detected text in the image: {texts}"
             visual_clues["visual_clues"][pid] = visual_clues["visual_clues"][pid].strip()
 
     with open(ocrs_file, 'w') as f:

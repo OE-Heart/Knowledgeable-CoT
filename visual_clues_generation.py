@@ -30,7 +30,8 @@ def get_visual_clues_with_chat(processor, model, image, device):
     blip2 = Blip2(processor, model, device)
     chat = AskQuestions(image, blip2, model="gpt-3.5-turbo")
 
-    questions, answers, n_token_chat = chat.chatting(n_rounds=10, print_mode="no")
+    questions, answers, n_token_chat = chat.chatting(n_rounds=10, print_mode="chat")
+    import ipdb; ipdb.set_trace()
     summary, summary_prompt, n_token_sum = summarize_chat(
         questions, answers, model="gpt-3.5-turbo"
     )
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     output_path = "data"
     output_name = "visual_clues_with_chat.json"
     plm_path = "/data/oyx/PLM"
-    device_id = 2
+    device_id = 0
     multiple_api_keys = False
 
     # model_name = "blip2-opt-2.7b"
@@ -89,7 +90,7 @@ if __name__ == "__main__":
 
         if count >= len(pids):
             print("# The result file is complete! We will exit!!!")
-            exit()
+            # exit()
         else:
             print("# The result file is not complete! We will continue!!!")
             pids = pids[count:]
@@ -99,13 +100,16 @@ if __name__ == "__main__":
     ## Generate image visual_clues
     print(f"Generating visual_clues!")
     for i, pid in enumerate(tqdm(pids)):
+        id = "1"
         image_file = os.path.join(
-            input_path, "images", problems[pid]["split"], pid, "image.png"
+            input_path, "images", problems[id]["split"], id, "image.png"
         )
         image = Image.open(image_file)
 
         if multiple_api_keys:
             set_openai_key(api_list[i % len(api_list)])
+
+        clues = get_visual_clues_with_chat(processor, model, image, device)
 
         try:
             clues = get_visual_clues_with_chat(processor, model, image, device)

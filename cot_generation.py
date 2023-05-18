@@ -30,9 +30,11 @@ def load_data(args):
     problems = json.load(open(os.path.join(args.data_root, "problems.json")))
     pid_splits = json.load(open(os.path.join(args.data_root, "pid_splits.json")))
     visual_clues = json.load(open(args.visual_clues_file))["visual_clues"]
+    knowledge = json.load(open(args.knowledge_file))["knowledge"]
 
     for qid in problems:
         problems[qid]["visual_clues"] = visual_clues[qid] if qid in visual_clues else ""
+        problems[qid]["knowledge"] = knowledge[qid] if qid in knowledge else ""
 
     qids = pid_splits["%s" % (args.test_split)]
     qids = qids[: args.test_number] if args.test_number > 0 else qids
@@ -61,6 +63,7 @@ def get_instruct_result(problems, shot_qids, test_qid, args):
     for qid in shot_qids:
         question = get_question_text(problems[qid])
         context = get_context_text(problems[qid], args.use_visual_clues)
+        knowledge = get_knowledge_text(problems[qid])
         choice = get_choice_text(problems[qid], args.options)
         answer = get_answer(problems[qid], args.options)
         lecture = get_lecture_text(problems[qid])
@@ -70,6 +73,7 @@ def get_instruct_result(problems, shot_qids, test_qid, args):
             args.prompt_format,
             question,
             context,
+            knowledge,
             choice,
             answer,
             lecture,
@@ -81,6 +85,7 @@ def get_instruct_result(problems, shot_qids, test_qid, args):
     # test example
     question = get_question_text(problems[test_qid])
     context = get_context_text(problems[test_qid], args.use_visual_clues)
+    knowledge = get_knowledge_text(problems[test_qid])
     choice = get_choice_text(problems[test_qid], args.options)
     answer = get_answer(problems[test_qid], args.options)
     lecture = get_lecture_text(problems[test_qid])
@@ -90,6 +95,7 @@ def get_instruct_result(problems, shot_qids, test_qid, args):
         args.prompt_format,
         question,
         context,
+        knowledge,
         choice,
         answer,
         lecture,
@@ -171,6 +177,9 @@ def parse_args():
     parser.add_argument(
         "--visual_clues_file", type=str, default="data/visual_clues.json"
     )
+    parser.add_argument(
+        "--knowledge_file", type=str, default="data/knowledge.json"
+    )
     parser.add_argument("--model", type=str, default="chatgpt")
     parser.add_argument("--options", type=list, default=["A", "B", "C", "D", "E"])
     # user options
@@ -227,6 +236,7 @@ def parse_args():
             "QCEM-A",
             "QCLEM-A",
             "QCML-AE",
+            "QCKM-ALE",
         ],
         help="prompt format template",
     )
@@ -288,7 +298,7 @@ if __name__ == "__main__":
             print(
                 f"{len(results)}/{len(qids)}, correct: {correct}, acc: {round(acc, 2)}%"
             )
-            exit()
+            # exit()
         else:
             print("## The result file is not complete! We will continue!!!")
             qids = qids[count:]

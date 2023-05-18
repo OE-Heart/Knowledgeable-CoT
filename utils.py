@@ -13,6 +13,17 @@ def get_hint_text(problem):
     return hint
 
 
+def get_metadata(problem):
+    metadata = {}
+    metadata["has_image"] = True if problem["image"] else False
+    metadata["grade"] = int(problem["grade"].replace("grade", ""))
+    metadata["subject"] = problem["subject"]
+    metadata["topic"] = problem["topic"]
+    metadata["category"] = problem["category"]
+    metadata["skill"] = problem["skill"]
+    return metadata
+
+
 def get_context_text(problem, use_visual_clues):
     txt_context = get_hint_text(problem)
     img_context = get_visual_clues(problem) if use_visual_clues else ""
@@ -20,6 +31,11 @@ def get_context_text(problem, use_visual_clues):
     if context == "":
         context = "Select the better answer."
     return context
+
+
+def get_knowledge_text(problem):
+    knowledge = problem["knowledge"]
+    return knowledge
 
 
 def get_choice_text(probelm, options):
@@ -49,7 +65,7 @@ def get_solution_text(problem):
 
 
 def create_one_example(
-    format, question, context, choice, answer, lecture, solution, test_example=True
+    format, question, context, knowledge, choice, answer, lecture, solution, test_example=True
 ):
 
     input_format, output_format = format.split("-")
@@ -59,6 +75,8 @@ def create_one_example(
         input = f"Context: {context}\nQuestion: {question}\nOptions: {choice}\n"
     elif input_format == "QCM":
         input = f"Question: {question}\nContext: {context}\nOptions: {choice}\n"
+    elif input_format == "QCKM":
+        input = f"Question: {question}\nContext: {context}\nKnowledge: {knowledge}\nOptions: {choice}\n"
     # upper bound experiment
     elif input_format == "QCML":
         input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nBECAUSE: {lecture}\n"

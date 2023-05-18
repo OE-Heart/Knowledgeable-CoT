@@ -17,12 +17,29 @@ def get_acc_with_contion(res_pd, key, values):
     return acc
 
 
-def get_scores(result_file, data_file):
+def faithful_inference(results, bleu1s, bleu4s, rouges, similarities):
+    faithfulness = {}
+    for i in range(len(results)):
+        key = results[i]
+        if key not in faithfulness:
+            faithfulness[key] = 0
+        
+        faithfulness[key] += bleu1s[i] + bleu4s[i] + rouges[i] + similarities[i] # TODO: weights
+    
+    return int(max(faithfulness, key=faithfulness.get))
+
+
+def get_scores(result_file, data_file, n_paths, faithful=False):
     # read result file
     results = json.load(open(result_file))["results"]
     num = len(results)
     assert num == 4241
-    #print("number of questions:", num)
+
+    if faithful:
+        bleu1s = json.load(open(result_file))["bleu1s"]
+        bleu4s = json.load(open(result_file))["bleu4s"]
+        rouges = json.load(open(result_file))["rouges"]
+        similarities = json.load(open(result_file))["similarities"]
 
     # read data file
     sqa_data = json.load(open(data_file))
@@ -40,7 +57,21 @@ def get_scores(result_file, data_file):
         res_pd.loc[index, 'has_text_image'] = True if (row['hint'] and row['image']) else False
 
         label = row['answer']
-        pred = int(results[index])
+
+        if isinstance(results[index], list):
+            n_results = results[index][:n_paths]
+
+            if faithful:
+                n_bleu1s = bleu1s[index][:n_paths]
+                n_bleu4s = bleu4s[index][:n_paths]
+                n_rouges = rouges[index][:n_paths]
+                n_similarities = similarities[index][:n_paths]
+                pred = faithful_inference(n_results, n_bleu1s, n_bleu4s, n_rouges, n_similarities) 
+            else:
+                pred = max(n_results, key=n_results.count) # self-consistency (majority vote)
+        else:
+            pred = int(results[index])
+
         res_pd.loc[index, 'pred'] = pred
         res_pd.loc[index, 'true_false'] = (label == pred)
 
@@ -85,11 +116,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_file', type=str, default="data/scienceqa/problems.json")
-    parser.add_argument('--result_file', type=str, default="results/chatgpt/test/QCM-ALE/visual_clues.json/2shots_seed_1.json")
+    parser.add_argument('--result_file', type=str, default="results/chatgpt/test/QCM-ALE/visual_clues_ocrs.json/paths_10/2shots_seed_3.json")
+    parser.add_argument('--n_paths', type=int, default=10)
+    parser.add_argument('--faithful_inference', action='store_true', default=False)
     args = parser.parse_args()
 
     print("Data file: ", args.data_file)
     print("Result file: ", args.result_file)
 
-    scores = get_scores(args.result_file, args.data_file)
+    scores = get_scores(args.result_file, args.data_file, args.n_paths, args.faithful_inference)
     print_scores(scores)

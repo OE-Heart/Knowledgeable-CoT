@@ -41,24 +41,28 @@ def bleu_score(reference, hypothesis, gram):
 
 def caculate_bleu(results, data, gram):
     bleus = []
-    for qid, output in results.items():
-        prediction = re.sub(r"The answer is [A-Z]. BECAUSE: ", "", output)
-        target = data[qid]["lecture"] + " " + data[qid]["solution"]
-        target = target.strip()
-        if target == "":
-            continue
-        bleu = bleu_score(target, prediction, gram)
-        bleus.append(bleu)
+    for qid, outputs in results.items():
+        bleu = []
+        for output in outputs:
+            prediction = re.sub(r"The answer is [A-Z]. BECAUSE: ", "", output)
+            target = data[qid]["lecture"] + " " + data[qid]["solution"]
+            target = target.strip()
+            if prediction == "" or target == "":
+                if len(bleu) == 0:
+                    bleu.append(0)
+                bleu.append(sum(bleu) / len(bleu))
+            else:
+                bleu.append(bleu_score(target, prediction, gram))
+        bleus.append(sum(bleu) / len(bleu))
 
     avg_bleu = sum(bleus) / len(bleus)
-
     return avg_bleu
 
 
 ########################
 ## Rouge-L
 ########################
-def score_rouge(str1, str2):
+def rouge_score(str1, str2):
     rouge = Rouge(metrics=["rouge-l"])
     scores = rouge.get_scores(str1, str2, avg=True)
     rouge_l = scores['rouge-l']['f']
@@ -67,16 +71,19 @@ def score_rouge(str1, str2):
 
 def caculate_rouge(results, data):
     rouges = []
-    for qid, output in results.items():
-        prediction = re.sub(r"The answer is [A-Z]. BECAUSE: ", "", output)
-        target = data[qid]["lecture"] + " " + data[qid]["solution"]
-        target = target.strip()
-        if prediction == "":
-            continue
-        if target == "":
-            continue
-        rouge = score_rouge(target, prediction)
-        rouges.append(rouge)
+    for qid, outputs in results.items():
+        rouge = []
+        for output in outputs:
+            prediction = re.sub(r"The answer is [A-Z]. BECAUSE: ", "", output)
+            target = data[qid]["lecture"] + " " + data[qid]["solution"]
+            target = target.strip()
+            if prediction == "" or target == "":
+                if len(rouge) == 0:
+                    rouge.append(0)
+                rouge.append(sum(rouge) / len(rouge))
+            else:
+                rouge.append(rouge_score(target, prediction))
+        rouges.append(sum(rouge) / len(rouge))
 
     avg_rouge = sum(rouges) / len(rouges)
     return avg_rouge
@@ -95,13 +102,19 @@ def similariry_score(str1, str2, model):
 
 def caculate_similariry(results, data, model):
     scores = []
-    for qid, output in results.items():
-        prediction = re.sub(r"The answer is [A-Z]. BECAUSE: ", "", output)
-        target = data[qid]["lecture"] + " " + data[qid]["solution"]
-        target = target.strip()
-
-        score = similariry_score(target, prediction, model)
-        scores.append(score)
+    for qid, outputs in results.items():
+        score = []
+        for output in outputs:
+            prediction = re.sub(r"The answer is [A-Z]. BECAUSE: ", "", output)
+            target = data[qid]["lecture"] + " " + data[qid]["solution"]
+            target = target.strip()
+            if prediction == "" or target == "":
+                if len(score) == 0:
+                    score.append(0)
+                score.append(sum(score) / len(score))
+            else:
+                score.append(similariry_score(target, prediction, model))
+        scores.append(sum(score) / len(score))
 
     avg_score = sum(scores) / len(scores)
     return avg_score

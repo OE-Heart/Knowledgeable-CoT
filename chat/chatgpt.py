@@ -1,3 +1,4 @@
+import time
 from tqdm import tqdm
 from tenacity import (
     retry,
@@ -115,7 +116,7 @@ def call_chatgpt(chatgpt_messages, max_tokens=40, model="gpt-3.5-turbo"):
     output = prompt_input.get_openai_result(
         engine=model,
         system_message=chatgpt_messages,
-        temperature=0.6,
+        temperature=0,
         max_tokens=max_tokens,
     )
 
@@ -221,6 +222,7 @@ class AskQuestions:
             print("--------Chat Starts----------")
 
         for i in tqdm(range(n_rounds), desc="Chat Rounds", disable=print_mode != "bar"):
+            # time.sleep(20)
             question = self.ask_question()
             # print('Raw: {}'.format(question))
             question = self.question_trim(question)

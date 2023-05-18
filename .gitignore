@@ -130,7 +130,6 @@ dmypy.json
 '
 # Others
 data/scienceqa/images
-data/knowledge.json
 indexes/
 results/
 test/
